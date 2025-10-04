@@ -25,7 +25,10 @@ export const ContatoController = {
     try {
       const id = Number(req.params.id);
       await container.contatoService.remove(id);
-      res.status(200).json({ message: "Contato deletado com sucesso." });
-    } catch (e) { next(e); }
-  },
+      res.setHeader('X-Message', 'Contato deletado com sucesso.');
+      return res.status(204).send();
+    } catch (e) {
+      next(e);
+    }
+  }
 };
