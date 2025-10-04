@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CONTATZ • Port Louis</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Vuetify v3 (CDN) -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@3.7.4/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.4/dist/vuetify.min.js"></script>
+
+    <style>
+      :root {
+        --gap: 0.75rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: #fafafa;
+        margin: 0;
+        font-family: Roboto, system-ui, -apple-system, Segoe UI, Helvetica,
+          Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+      .ddd-11 {
+        background-color: #bbdefb !important;
+      }
+
+      body.bg-light .ddd-11 {
+        background-color: #bbdefb !important;
+        color: #0d47a1 !important;
+      }
+
+      body.bg-dark .ddd-11 {
+        background-color: #0d47a1 !important;
+        color: #e3f2fd !important;
+      }
+
+      .brand-title {
+        font-family: "Changa One", sans-serif;
+        font-weight: 400;
+        letter-spacing: 0.5px;
+      }
+      .toolbar {
+        display: flex;
+        gap: var(--gap);
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      body.bg-light {
+        background: url("/assets/claro.jpg") center/cover fixed no-repeat;
+      }
+      body.bg-dark {
+        background: url("/assets/escuro.jpg") center/cover fixed no-repeat;
+      }
+      .v-application,
+      .v-main {
+        background: transparent !important;
+      }
+    </style>
+  </head>
+  <body>
+    <script id="env" type="application/json">
+      { "API_BASE": "http://localhost:3000" }
+    </script>
+
+    <div id="app">
+      <v-app>
+        <v-main>
+          <v-container class="py-8" max-width="960">
+            <div class="toolbar">
+              <h1 class="text-brand-title">CONTATZ</h1>
+              <div>
+                <v-btn icon variant="text" @click="actions.toggleTheme">
+                  <v-icon
+                    >{{ ui.isDark ? 'mdi-weather-sunny' : 'mdi-weather-night'
+                    }}</v-icon
+                  >
+                </v-btn>
+                <v-btn
+                  :color="ui.isDark ? 'primary' : 'success'"
+                  prepend-icon="mdi-plus"
+                  @click="ui.openCreate()"
+                  >Adicionar</v-btn
+                >
+              </div>
+            </div>
+
+            <v-card>
+              <v-data-table
+                :headers="ui.headers"
+                :items="contatos"
+                :loading="loading"
+                item-key="id"
+                loading-text="Carregando..."
+              >
+                <template #item="{ item, columns }">
+                  <tr :class="ui.rowClass(item)">
+                    <td v-for="column in columns" :key="column.key">
+                      <template v-if="column.key === 'acoes'">
+                        <v-btn
+                          icon="mdi-pencil"
+                          variant="text"
+                          @click="ui.openEdit(item)"
+                        ></v-btn>
+                        <v-btn
+                          icon="mdi-delete"
+                          variant="text"
+                          color="error"
+                          @click="actions.remove(item)"
+                        ></v-btn>
+                      </template>
+                      <template v-else> {{ item[column.key] }} </template>
+                    </td>
+                  </tr>
+                </template>
+              </v-data-table>
+            </v-card>
+
+            <v-dialog v-model="ui.dialog.open" max-width="560">
+              <v-card>
+                <v-card-title class="text-h6"
+                  >{{ ui.dialog.isEditing ? 'Editar contato' : 'Novo contato'
+                  }}</v-card-title
+                >
+                <v-card-text>
+                  <v-form @submit.prevent>
+                    <v-row>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="ui.form.nome"
+                          label="Nome"
+                          placeholder="Ex.:Nome Sobrenome"
+                          :error-messages="ui.errors.nome"
+                          :counter="120"
+                          required
+                          autofocus
+                        />
+                      </v-col>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="ui.form.telefone"
+                          label="Telefone"
+                          placeholder="(xx)xxxx-xxxx"
+                          class="mono"
+                          :error-messages="ui.errors.telefone"
+                          maxlength="13"
+                          required
+                          @blur="ui.maskPhone"
+                        />
+                      </v-col>
+                    </v-row>
+                  </v-form>
+                  <div v-if="ui.formError" class="text-error mt-2">
+                    {{ ui.formError }}
+                  </div>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn variant="text" @click="ui.close()">Cancelar</v-btn>
+                  <v-btn
+                    :color="ui.isDark ? 'primary' : 'success'"
+                    :disabled="!ui.isValid"
+                    @click="actions.save()"
+                    >Salvar</v-btn
+                  >
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-container>
+
+          <v-snackbar v-model="ui.snackbar.show" :timeout="2000">
+            {{ ui.snackbar.text }}
+          </v-snackbar>
+        </v-main>
+      </v-app>
+    </div>
+
+    <script>
+      const { createApp, ref, reactive, onMounted } = Vue;
+      const { createVuetify } = Vuetify;
+
+      const vuetify = createVuetify({
+        theme: {
+          defaultTheme: "lightTheme",
+          themes: {
+            lightTheme: {
+              dark: false,
+              colors: {
+                primary: "#2563EB",
+                secondary: "#7C3AED",
+                background: "#F6F7FB",
+                surface: "#FFFFFF",
+                error: "#EF4444",
+              },
+            },
+            darkTheme: {
+              dark: true,
+              colors: {
+                primary: "#60A5FA",
+                secondary: "#C084FC",
+                background: "#0f172a",
+                surface: "#1e293b",
+                error: "#f87171",
+              },
+            },
+          },
+        },
+      });
+
+      function readEnv() {
+        try {
+          const raw = document.getElementById("env")?.textContent || "{}";
+          return JSON.parse(raw);
+        } catch {
+          return {};
+        }
+      }
+      function apiClient(base) {
+        return {
+          async get(p) {
+            return fetch(base + p);
+          },
+          async send(p, m, body) {
+            return fetch(base + p, {
+              method: m,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+          },
+        };
+      }
+
+      const validators = {
+        nome(v) {
+          if (typeof v !== "string") return false;
+          const words = v.trim().split(/\s+/);
+          if (words.length < 2) return false;
+          return words.every((w) => /^[A-Za-zÀ-ÿ]{3,}$/.test(w));
+        },
+        telefone(v) {
+          return /^\(\d{2}\)\d{4}-\d{4}$/.test(v || "");
+        },
+      };
+
+      function useContatos(apiBase) {
+        const api = apiClient(apiBase);
+        const contatos = ref([]);
+        const loading = ref(false);
+
+        async function reload() {
+          loading.value = true;
+          try {
+            const res = await api.get("/contatos");
+            const data = await res.json().catch(() => []);
+            contatos.value = Array.isArray(data) ? data : [];
+          } catch (e) {
+            contatos.value = [];
+            console.error(e);
+          } finally {
+            loading.value = false;
+          }
+        }
+        async function create(dto) {
+          const res = await api.send("/contatos", "POST", dto);
+          if (!res.ok)
+            throw new Error((await res.json()).message || "Falha ao criar.");
+        }
+        async function update(id, dto) {
+          const res = await api.send("/contatos/" + id, "PATCH", dto);
+          if (!res.ok)
+            throw new Error(
+              (await res.json()).message || "Falha ao atualizar."
+            );
+        }
+        async function remove(id) {
+          const res = await fetch(apiBase + "/contatos/" + id, {
+            method: "DELETE",
+          });
+          if (res.status !== 204 && !res.ok) {
+            let msg = "Falha ao excluir.";
+            try {
+              msg = (await res.json()).message || msg;
+            } catch {}
+            throw new Error(msg);
+          }
+        }
+        return { contatos, loading, reload, create, update, remove };
+      }
+
+      createApp({
+        setup() {
+          const API_BASE = readEnv().API_BASE || "http://localhost:3000";
+          const { contatos, loading, reload, create, update, remove } =
+            useContatos(API_BASE);
+
+          const theme = Vuetify.useTheme();
+          const ui = reactive({
+            headers: [
+              { title: "Nome", key: "nome", align: "start" },
+              { title: "Telefone", key: "telefone" },
+              { title: "Ações", key: "acoes", sortable: false },
+            ],
+            dialog: { open: false, isEditing: false, id: null },
+            form: { nome: "", telefone: "" },
+            formError: "",
+            errors: { nome: [], telefone: [] },
+            snackbar: { show: false, text: "" },
+
+            get isValid() {
+              return (
+                validators.nome(ui.form.nome) &&
+                validators.telefone(ui.form.telefone)
+              );
+            },
+
+            openCreate() {
+              ui.dialog.open = true;
+              ui.dialog.isEditing = false;
+              ui.dialog.id = null;
+              ui.form.nome = "";
+              ui.form.telefone = "";
+              ui.formError = "";
+              ui.errors.nome = [];
+              ui.errors.telefone = [];
+            },
+            openEdit(item) {
+              ui.dialog.open = true;
+              ui.dialog.isEditing = true;
+              ui.dialog.id = item.id;
+              ui.form.nome = item.nome;
+              ui.form.telefone = item.telefone;
+              ui.formError = "";
+              ui.errors.nome = [];
+              ui.errors.telefone = [];
+            },
+            close() {
+              ui.dialog.open = false;
+            },
+
+            maskPhone() {
+              const digits = String(ui.form.telefone || "")
+                .replace(/\D/g, "")
+                .slice(0, 10);
+              if (!digits) {
+                ui.form.telefone = "";
+                return;
+              }
+              const d = digits;
+              let mid = d.slice(2, 6);
+              let end = d.slice(6, 10);
+              ui.form.telefone =
+                "(" + d.slice(0, 2) + ")" + mid + (end ? "-" + end : "");
+            },
+
+            rowClass(item) {
+              try {
+                return String(item.telefone).startsWith("(11)") ? "ddd-11" : "";
+              } catch {
+                return "";
+              }
+            },
+            isDark: false,
+          });
+
+          const actions = {
+            toggleTheme() {
+              ui.isDark = !ui.isDark;
+              theme.global.name.value = ui.isDark ? "darkTheme" : "lightTheme";
+              document.body.classList.toggle("bg-dark", ui.isDark);
+              document.body.classList.toggle("bg-light", !ui.isDark);
+            },
+            async save() {
+              ui.formError = "";
+              ui.errors.nome = ui.form.nome
+                ? validators.nome(ui.form.nome)
+                  ? []
+                  : ["Informe pelo menos 2 palavras de 3+ letras."]
+                : [];
+              ui.errors.telefone = ui.form.telefone
+                ? validators.telefone(ui.form.telefone)
+                  ? []
+                  : ["Use (XX)XXXX-XXXX, apenas números."]
+                : [];
+              if (!ui.isValid) return;
+              const payload = {
+                nome: ui.form.nome.trim(),
+                telefone: ui.form.telefone.trim(),
+              };
+              try {
+                if (ui.dialog.isEditing) await update(ui.dialog.id, payload);
+                else await create(payload);
+                await reload();
+                ui.snackbar.text = "Salvo com sucesso";
+                ui.snackbar.show = true;
+                ui.close();
+              } catch (e) {
+                ui.formError = e.message || "Falha ao salvar.";
+              }
+            },
+            async remove(item) {
+              if (!confirm('Excluir "' + item.nome + '"?')) return;
+              try {
+                await remove(item.id);
+                await reload();
+                ui.snackbar.text = "Excluído com sucesso";
+                ui.snackbar.show = true;
+              } catch (e) {
+                alert(e.message || "Falha ao excluir.");
+              }
+            },
+          };
+
+          onMounted(async () => {
+            await reload();
+            document.body.classList.add("bg-light");
+          });
+          return { ui, contatos, loading, actions };
+        },
+      })
+        .use(vuetify)
+        .mount("#app");
+    </script>
+  </body>
+</html>
