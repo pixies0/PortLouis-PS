@@ -141,7 +141,7 @@
                   }}</v-card-title
                 >
                 <v-card-text>
-                  <v-form @submit.prevent>
+                  <v-form @submit.prevent="actions.save">
                     <v-row>
                       <v-col cols="12">
                         <v-text-field
@@ -156,6 +156,7 @@
                       </v-col>
                       <v-col cols="12">
                         <v-text-field
+                          ref="phoneInput"
                           v-model="ui.form.telefone"
                           label="Telefone"
                           placeholder="(xx)xxxx-xxxx"
@@ -163,25 +164,28 @@
                           :error-messages="ui.errors.telefone"
                           maxlength="13"
                           required
-                          @blur="ui.maskPhone"
+                          @input="ui.maskPhone($event)"
                         />
                       </v-col>
                     </v-row>
+
+                    <v-card-actions class="mt-2">
+                      <v-spacer></v-spacer>
+                      <v-btn variant="text" @click="ui.close()">Cancelar</v-btn>
+                      <v-btn
+                        :color="ui.isDark ? 'primary' : 'success'"
+                        :disabled="!ui.isValid"
+                        type="submit"
+                      >
+                        Salvar
+                      </v-btn>
+                    </v-card-actions>
                   </v-form>
+
                   <div v-if="ui.formError" class="text-error mt-2">
                     {{ ui.formError }}
                   </div>
                 </v-card-text>
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn variant="text" @click="ui.close()">Cancelar</v-btn>
-                  <v-btn
-                    :color="ui.isDark ? 'primary' : 'success'"
-                    :disabled="!ui.isValid"
-                    @click="actions.save()"
-                    >Salvar</v-btn
-                  >
-                </v-card-actions>
               </v-card>
             </v-dialog>
           </v-container>
@@ -194,7 +198,7 @@
     </div>
 
     <script>
-      const { createApp, ref, reactive, onMounted } = Vue;
+      const { createApp, ref, reactive, onMounted, nextTick } = Vue;
       const { createVuetify } = Vuetify;
 
       const vuetify = createVuetify({
@@ -355,19 +359,45 @@
               ui.dialog.open = false;
             },
 
-            maskPhone() {
-              const digits = String(ui.form.telefone || "")
-                .replace(/\D/g, "")
-                .slice(0, 10);
-              if (!digits) {
-                ui.form.telefone = "";
-                return;
+            maskPhone(e) {
+              const input = e?.target;
+              if (!input) return;
+
+              const rawValue = input.value;
+              const cursor = input.selectionStart;
+
+              const digitsBeforeCursor = rawValue
+                .slice(0, cursor)
+                .replace(/\D/g, "").length;
+
+              const digits = rawValue.replace(/\D/g, "").slice(0, 10);
+
+              let formatted = "";
+              if (digits.length > 0) {
+                formatted = "(" + digits.slice(0, 2);
+                if (digits.length >= 2) formatted += ")";
+                formatted += digits.slice(2, 6);
+                if (digits.length > 6) formatted += "-" + digits.slice(6, 10);
               }
-              const d = digits;
-              let mid = d.slice(2, 6);
-              let end = d.slice(6, 10);
-              ui.form.telefone =
-                "(" + d.slice(0, 2) + ")" + mid + (end ? "-" + end : "");
+
+              ui.form.telefone = formatted;
+
+              let newCursorPos = 0;
+              let digitCount = 0;
+              for (let i = 0; i < formatted.length; i++) {
+                if (/\d/.test(formatted[i])) digitCount++;
+                if (digitCount >= digitsBeforeCursor) {
+                  newCursorPos = i + 1;
+                  break;
+                }
+              }
+              if (newCursorPos === 0) newCursorPos = formatted.length;
+
+              Vue.nextTick(() => {
+                try {
+                  input.setSelectionRange(newCursorPos, newCursorPos);
+                } catch {}
+              });
             },
 
             rowClass(item) {
