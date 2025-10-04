@@ -1,0 +1,11 @@
+CREATE DATABASE IF NOT EXISTS contatos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE contatos_db;
+
+CREATE TABLE IF NOT EXISTS contatos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(120) NOT NULL,
+  telefone VARCHAR(14) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_contatos_nome ON contatos(nome);
