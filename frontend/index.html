@@ -65,10 +65,10 @@
         margin-bottom: 1rem;
       }
       body.bg-light {
-        background: url("/assets/claro.jpg") center/cover fixed no-repeat;
+        background: url("assets/claro.jpg") center/cover fixed no-repeat;
       }
       body.bg-dark {
-        background: url("/assets/escuro.jpg") center/cover fixed no-repeat;
+        background: url("assets/escuro.jpg") center/cover fixed no-repeat;
       }
       .v-application,
       .v-main {
@@ -190,7 +190,11 @@
             </v-dialog>
           </v-container>
 
-          <v-snackbar v-model="ui.snackbar.show" :timeout="2000">
+          <v-snackbar
+            v-model="ui.snackbar.show"
+            :timeout="2000"
+            :color="ui.isDark ? 'primary' : 'success'"
+          >
             {{ ui.snackbar.text }}
           </v-snackbar>
         </v-main>

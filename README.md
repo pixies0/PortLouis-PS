@@ -129,12 +129,12 @@ curl -s -X PATCH http://localhost:3000/contatos/1 \
 Remove um contato do banco de dados com base no ID informado.
 
 ```bash
-curl -i -X DELETE http://localhost:3000/contatos/1  
+curl -i -X DELETE http://localhost:3000/contatos/1
 ```
 
 ## Executando frontend
 
-Apenas abra o arquivo ```index.html``` no navegador simultâneamente ao servidor .
+Apenas abra o arquivo ```frontend/index.html``` no navegador simultâneamente ao servidor .
 
 ## 🧠 Dicas
 
