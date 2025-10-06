@@ -93,39 +93,48 @@ Se tudo estiver configurado certo... as seguintes rotas devem retornar 200 com u
 
 ## Domínio Contatos
 
+Teste os endpoints inline via terminal se quiser.
+
 ### POST ```/contatos```
 
 Cria um novo contato.
 
-```json
-{
-  "nome": "Maria Oliveira",
-  "telefone": "(63)9999-9999"
-}
+```bash
+curl -s -X POST http://localhost:3000/contatos \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"Scooby Doo","telefone":"(11) 1234-5678"}'
 ```
 
 ### GET ```/contatos/:id```
 
 Retorna a lista completa de contatos cadastrados.
 
+
+```bash
+curl -s http://localhost:3000/contatos
+```
+
 ### PATCH ```/contatos/:id```
 
 Atualiza os dados de um contato existente.
 
-```json
-{
-  "nome": "Maria de Oliveira",
-  "telefone": "(63)9888-8888"
-}
+```bash
+curl -s -X PATCH http://localhost:3000/contatos/1 \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"Scooby Doo","telefone":"(63) 3333-4444"}'
 ```
 
 ### DELETE ```/contatos/:id```
 
 Remove um contato do banco de dados com base no ID informado.
 
+```bash
+curl -i -X DELETE http://localhost:3000/contatos/1  
+```
+
 ## Executando frontend
 
-Apenas só abre o arquivo ```index.html```no navegador.
+Apenas abra o arquivo ```index.html``` no navegador simultâneamente ao servidor .
 
 ## 🧠 Dicas
 
@@ -133,4 +142,4 @@ Apenas só abre o arquivo ```index.html```no navegador.
 
 * Caso ocorra erro de conexão, revise as variáveis no arquivo .env.
 
-* O servidor conta com um serviço de logs em tempo real, portanto quaisquer erros ou eventos importantes serão exibidos diretamente no console do servidor — verifique-o para diagnóstico detalhado.
+* O servidor conta com um serviço de logs, portanto quaisquer erros ou eventos importantes serão exibidos diretamente no console do servidor — verifique-o para diagnóstico detalhado.
