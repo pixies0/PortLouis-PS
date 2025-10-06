@@ -73,7 +73,7 @@ PORT=3000
 DB_HOST=localhost
 DB_USER=seu_usuario
 DB_PASSWORD=sua_senha
-DB_NAME=contatos_db
+DB_NAME=seu_banco_de_dados
 DB_PORT=3306
 ```
 ### ▶️ Rodando o servidor
